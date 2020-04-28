@@ -69,7 +69,22 @@ class DDocuments(Document):
 # defining schema for json serialization
 class DDcoumentsSchema(ModelSchema):
     class Meta:
-        model = DDcoumentsSchema
+        model = DDcouments
 
 
+class Operator(Document){
+    name = StringField()
+    surname = StringField()
+    phone = StringField()
+    dob = DateTimeField()
+    email = EmailField()
+    address = EmbeddedDocumentField(Address)
+    password = StringField()
+    doj = DateTimeField()
+}
+
+# defining schema for json serialization
+class OperatorSchema(ModelSchema):
+    class Meta:
+        model = Operator
 
