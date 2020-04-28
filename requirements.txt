@@ -24,7 +24,6 @@ Jinja2==2.10
 lazy-object-proxy==1.4.3
 MarkupSafe==1.0
 marshmallow==3.5.1
-marshmallow-mongoengine==0.9.1
 mccabe==0.6.1
 mongoengine==0.19.1
 parso==0.7.0
