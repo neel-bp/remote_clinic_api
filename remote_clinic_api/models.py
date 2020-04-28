@@ -30,22 +30,22 @@ class Address(EmbeddedDocument):
     street = StringField(),
 
 class Doctor(Document):
-    name = StringField()
-    surname = StringField()
-    email = EmailField()
+    name = StringField(max_length=255, required=True)
+    surname = StringField(max_length=255, required=True)
+    email = EmailField(required=True)
     phone = StringField()
-    gender = StringField()
-    address = EmbeddedDocumentField(Address)
-    image_path = StringField()
+    gender = StringField(max_length=32,required=True)
+    address = DictField(required=True)
+    image_path = StringField(required=True)
     signup_date = DateTimeField(default=datetime.utcnow)
-    online = BooleanField()
-    specilization = StringField()
-    about = StringField()
+    online = BooleanField(required=True)
+    specilization = StringField(max_length=255,required=True)
+    about = StringField(max_length=255,required=True)
     experience = StringField()
-    pmdc_verified = BooleanField()
-    pmdc_reg_num = StringField()
-    verification_status = StringField()
-    verified_by = ObjectIdField()
+    pmdc_verified = BooleanField(required=True)
+    pmdc_reg_num = StringField(required=True)
+    verification_status = StringField(required=True)
+    verified_by = ObjectIdField(required=True)
     verification_date = DateTimeField()
 
 # defining schema for json serialization
@@ -69,7 +69,7 @@ class DDocuments(Document):
 # defining schema for json serialization
 class DDcoumentsSchema(ModelSchema):
     class Meta:
-        model = DDocuments
+        model = DDocuments  
 
 class Operator(Document):
     name = StringField()
