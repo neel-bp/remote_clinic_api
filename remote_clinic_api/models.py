@@ -54,8 +54,8 @@ class DoctorSchema(ModelSchema):
         model = Doctor
 
 class DDocuments(Document):
-    owner: ObjectIdField(required=True)
-    title: StringField(max_length=255, required=True)
+    owner = ObjectIdField(required=True)
+    title = StringField(max_length=255, required=True)
     type_ = StringField(max_length=64, required=True)
     description = StringField(max_length=255, required=True)
     issued_by_org = StringField(max_length=255, required=True)
