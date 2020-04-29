@@ -29,16 +29,39 @@ def doctor():
     else:
         res = Response()
         res.status_code = 402
-        res.status = "Bad Request: Action Not Defined"
         return res
 
 @app.route('/doctors/<id>', methods=['GET','PUT', 'DELETE'])
 def doctors(id):
     if request.method == 'GET': ## Return Single Doctor.
-        return jsonify({'method': 'GET','route': '/doctor/<id>','param': id})
+        try: # Try to get doctor info with the given id. 
+            result = Doctor.objects(id = id)
+            jsonData = result.to_json()
+            return jsonData
+        except IndexError as notFound:
+            return f'Record with the id: `{id}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message
     elif request.method == 'PUT': ## Update Doctor.
-        return jsonify({'method': 'PUT','route': '/doctor/<id>','param': id})
+        try:
+            body = request.json
+            result = Doctor.objects(id = id)
+            result[0].update(**body)
+            return id
+        except IndexError as notFound:
+            return f'Record with the id: `{id}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message        
     elif request.method == 'DELETE': ## Delete Doctor.
-        return jsonify({'method': 'DELETE','route': '/doctor/<id>','param': id})
+        try:
+            result = Doctor.objects(id = id)
+            result[0].delete()
+            return id
+        except IndexError as notFound:
+            return f'Record with the id: `{id}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message
     else:
-        return "405: Invalid Request Type."
+        res = Response()
+        res.status_code = 402
+        return res
