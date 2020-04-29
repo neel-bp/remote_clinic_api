@@ -14,8 +14,21 @@ def hello():
 
 @app.route('/doctors', methods=['GET', 'POST'])
 def doctor():
-    if request.method == 'GET': ## Return All Doctors List. 
-        result = Doctor.objects() # Query all the objects.
+    if request.method == 'GET': ## Return All Doctors List.
+        limit = request.args.get('limit')
+        offset = request.args.get('offset')
+        try:
+            if limit is not None: limit = int(limit)
+            if offset is not None: offset = int(offset)
+
+            if offset is None: end = limit
+            elif limit is None: end = None 
+            else: end = limit + offset
+
+        except TypeError as ve:
+            end = None
+            offset = None
+        result = Doctor.objects[offset:end]
         jsonData = result.to_json()
         return jsonData
     elif request.method == 'POST': ## Add Doctor Record.
