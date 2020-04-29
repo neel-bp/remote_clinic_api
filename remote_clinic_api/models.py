@@ -59,7 +59,7 @@ class DDocuments(Document):
     type_ = StringField(max_length=64, required=True)
     description = StringField(max_length=255, required=True)
     issued_by_org = StringField(max_length=255, required=True)
-    issued_date = DateTimeField(required=True)
+    issued_date = DateTimeField(default=datetime.utcnow)
     img_path = StringField(required=True),
     verification_status = StringField(max_length=64, required=True),
     verified_by = ObjectIdField(),
