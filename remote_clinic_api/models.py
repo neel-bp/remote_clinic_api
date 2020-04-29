@@ -54,14 +54,14 @@ class DoctorSchema(ModelSchema):
         model = Doctor
 
 class DDocuments(Document):
-    owner: ObjectIdField()
-    title: StringField()
-    type_ = StringField()
-    description = StringField()
-    issued_by_org = StringField()
-    issued_date = DateTimeField()
-    img_path = StringField(),
-    verification_status = StringField(),
+    owner: ObjectIdField(required=True)
+    title: StringField(max_length=255, required=True)
+    type_ = StringField(max_length=64, required=True)
+    description = StringField(max_length=255, required=True)
+    issued_by_org = StringField(max_length=255, required=True)
+    issued_date = DateTimeField(required=True)
+    img_path = StringField(required=True),
+    verification_status = StringField(max_length=64, required=True),
     verified_by = ObjectIdField(),
     verification_date = DateTimeField(),
     rejection_cause = StringField()
