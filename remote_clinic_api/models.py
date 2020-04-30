@@ -145,14 +145,15 @@ class DDcoumentsSchema(ModelSchema):
         model = DDocuments  
 
 class Operator(Document):
-    name = StringField()
-    surname = StringField()
-    phone = StringField()
+    name = StringField(max_length=255, required=True)
+    surname = StringField(max_length=255)
+    phone = StringField(max_length=255)
+    avatar = StringField()
     dob = DateTimeField()
-    email = EmailField()
-    address = EmbeddedDocumentField(Address)
-    password = StringField()
-    doj = DateTimeField()
+    email = EmailField(unique=True, required=True)
+    address = DictField()
+    password = StringField(required=True)
+    doj = DateTimeField(default=datetime.utcnow)
 
 
 # defining schema for json serialization
