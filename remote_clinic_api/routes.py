@@ -6,7 +6,7 @@ import json
 from flask import Response
 from markupsafe import escape
 from datetime import datetime
-from mongoengine import ValidationError, FieldDoesNotExist
+from mongoengine import ValidationError, FieldDoesNotExist, NotUniqueError
 
 @app.route('/')
 def hello():
@@ -225,4 +225,76 @@ def mod_docreviews(doctorId,reviewId):
             return jsonify({"documentId":reviewId,"ownerId":doctorId})
         except ValidationError as err:
             return err.message
+
+
+@app.route('/operators', methods=['GET','POST'])
+def operator():
+    if request.method == 'GET':
+        limit = request.args.get('limit')
+        offset = request.args.get('offset')
+        try:
+            if limit is not None: limit = int(limit)
+            if offset is not None: offset = int(offset)
+
+            if offset is None: end = limit
+            elif limit is None: end = None 
+            else: end = limit + offset
+
+        except TypeError as ve:
+            end = None
+            offset = None
+        result = Operator.objects[offset:end]
+        jsonData = result.to_json()
+        return jsonData
+    elif request.method == 'POST':
+        body = request.json
+        try: 
+            operator = Operator(**body)
+            operator.save()
+            return jsonify({'id': str(operator.id) })
+        except NotUniqueError as emailAlreadyReg:
+            return "ERROR: Account already registered with the given email Address."
+        except FieldDoesNotExist as atterr:
+            return f"INCORRECT STRUCTURE: {str(atterr)}"
+        except ValidationError as error:
+            return error.message
+    else:
+        res = Response()
+        res.status_code = 401
+        return res
+
+@app.route('/operators/<id>', methods=['GET','PUT','DELETE'])
+def get_operator(id):
+    if request.method == 'GET':
+        try: 
+            result = Operator.objects(id = id)
+            jsonData = result.to_json()
+            return jsonData
+        except IndexError as notFound:
+            return f'Record with the id: `{id}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message
+    elif request.method == 'PUT':
+        try:
+            body = request.json
+            result = Operator.objects(id = id)
+            result[0].update(**body)
+            return id
+        except IndexError as notFound:
+            return f'Record with the id: `{id}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message        
+    elif request.method == 'DELETE':
+        try:
+            result = Operator.objects(id = id)
+            result[0].delete()
+            return id
+        except IndexError as notFound:
+            return f'Record with the id: `{id}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message
+    else:
+        res = Response()
+        res.status_code = 401
+        return res
 
