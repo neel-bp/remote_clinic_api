@@ -35,7 +35,7 @@ def patients():
         new_patient = patient_schema.dump(patient)
         return jsonify(new_patient)
 
-@app.route('/patients/<string:patient_id>', methods=['GET','PATCH','PUT'])
+@app.route('/patients/<string:patient_id>', methods=['GET','PATCH','PUT','DELETE'])
 def get_patient(patient_id):
     if request.method == 'GET':
         patient_object = Patient.objects.exclude('password').get_or_404(id=str(patient_id))
@@ -49,6 +49,51 @@ def get_patient(patient_id):
         updated_patient = PatientSchema().load(patient_dic)
         updated_patient.save()
         return jsonify(PatientSchema().dump(updated_patient))
+    
+    elif request.method == 'DELETE':
+        patient_to_delete = Patient.objects.get_or_404(id=patient_id)
+        patient_to_delete.delete()
+        return jsonify({'message':f'{patient_id} patient has been successfully deleted'})
+
+@app.route('/patients/<string:patient_id>/prescriptions',methods=['GET','POST'])
+def get_prescriptions(patient_id):
+    if request.method == 'GET':
+        Prescription_objects = Prescription.objects(prescribed_for=str(patient_id))
+        prescription_schema = PrescriptionSchema()
+        pres_list = []
+        for i in Prescription_objects:
+            pres_list.append(prescription_schema.dump(i))
+        return jsonify(pres_list)
+    
+    elif request.method == 'POST':
+        pres_body = request.json
+        pres_body['prescribed_for'] = str(patient_id)
+        prescription = PrescriptionSchema().load(pres_body)
+        prescription.save()
+        return jsonify(PrescriptionSchema().dump(prescription))
+
+@app.route('/patients/<string:patient_id>/prescriptions/<string:pres_id>', methods=['GET','DELETE','PUT','PATCH'])
+def get_prescription(patient_id, pres_id):
+    if request.method == 'GET':
+        prescription = Prescription.objects.get_or_404(id=pres_id)
+        return jsonify(PrescriptionSchema().dump(prescription))
+    elif request.method == 'DELETE':
+        prescription_to_delete = Prescription.objects.get_or_404(id=pres_id)
+        prescription_to_delete.delete()
+        return jsonify({'message':f'{pres_id} has been successfully deleted'})
+    elif request.method == 'PUT' or request.method == 'PATCH':
+        try:
+            pres_body = request.json
+            pres_dic = PrescriptionSchema().dump(Prescription.objects.get_or_404(id=str(pres_id)))
+            pres_dic.update(pres_body)
+            prescription_updated = PrescriptionSchema().load(pres_dic)
+            prescription_updated.save()
+            return jsonify({'message':f'{pres_id} has been successfully added'})
+        except:
+            return jsonify({'message':f'some error has occured'})
+
+
+
 @app.route('/doctors', methods=['GET', 'POST'])
 def doctor():
     if request.method == 'GET': ## Return All Doctors List.
@@ -66,8 +111,10 @@ def doctor():
             end = None
             offset = None
         result = Doctor.objects[offset:end]
-        jsonData = result.to_json()
-        return jsonData
+        doc_list = []
+        for docs in result:
+            doc_list.append(DoctorSchema().dump(docs))
+        return jsonify(doc_list)
     elif request.method == 'POST': ## Add Doctor Record.
         body = request.json
         try: # Try to store doctor info. 
