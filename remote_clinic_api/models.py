@@ -175,7 +175,7 @@ class PermisstionSchema(ModelSchema):
 # Note: When creating new Role permissions should be already defined.
 class Roles(Document):
     title = StringField(required=True)
-    permissions = EmbeddedDocumentListField(Permissions) # List of permissions
+    permissions = EmbeddedDocumentListField(Permissions, required=True) # List of permissions
 
 
 # defining schema for json serialization
