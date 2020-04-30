@@ -37,8 +37,10 @@ class PatientSchema(ModelSchema):
 
 class Reviews(db.Document):
     rating = FloatField(max_value=5)
-    review_by = ReferenceField('Patient')
-    # review_for = ReferenceField('Doctor') after Doctor class is created
+    review_by = ObjectIdField(required=True) # Reviewer could be any
+    reviewer_name = StringField(max_length=255)
+    review_for = ObjectIdField(required=True) # Reviewed For could be any
+    for_name = StringField(max_length=255)
     review_date = DateTimeField(default=datetime.utcnow)
     comment = StringField()
 
