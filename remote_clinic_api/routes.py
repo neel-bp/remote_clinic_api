@@ -298,3 +298,82 @@ def get_operator(id):
         res.status_code = 401
         return res
 
+@app.route('/operators/<operatorId>/roles', methods=['GET','POST'])
+def operator_roles(operatorId):
+    if request.method == 'GET':
+        try:
+            result = OperatorRoles.objects(operator = operatorId)  
+            jsonData = result.to_json()
+            return jsonData
+        except IndexError as notFound:
+            return f'Record with the id: `{operatorId}` is NOT FOUND!!!'            
+        except ValidationError as err:
+            return err.message
+    elif request.method == 'POST':
+        body = request.json
+        try: # Try to store info. 
+            opRole = OperatorRoles(**body)
+            opRole.save()
+            return jsonify({"id": str(opRole.id)})
+        except FieldDoesNotExist as atterr:
+            return f"INCORRECT STRUCTURE: {str(atterr)}"
+        except ValidationError as error:
+            return error.message
+    else:
+        res = Response()
+        res.status_code = 401
+        return res
+
+@app.route('/operators/<operatorId>/roles/<roleId>', methods=['GET','PUT','DELETE'])
+def get_operator_roles(operatorId, roleId):
+    if request.method == 'GET':
+        try:
+            result = OperatorRoles.objects(operator = operatorId, id = roleId)  
+            jsonData = result.to_json()
+            return jsonData
+        except IndexError as notFound:
+            return f'Record with given id: `{roleId}` is NOT FOUND!!!'                        
+        except ValidationError as err:
+            return err.message
+    elif request.method == 'PUT':
+        try:
+            body = request.json
+            result = OperatorRoles.objects(operator = operatorId, id = roleId)  
+            result[0].update(**body)
+            return jsonify({"id": roleId, "operatorId": operatorId})
+        except IndexError as notFound:
+            return f'Record with the id: `{roleId}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message        
+    elif request.method == 'DELETE':
+        try:
+            result = OperatorRoles.objects(operator = operatorId, id = roleId)  
+            result[0].delete()
+            return jsonify({"roleId":roleId, "operatorId":operatorId})
+        except ValidationError as err:
+            return err.message
+    else:
+        res = Response()
+        res.status_code = 401
+        return res
+
+@app.route('/operators/<operatorId>/permissions', methods=['GET'])
+def operator_permission(operatorId):
+    if request.method == 'GET':
+        try:
+            permissions = [] # Create empty permisstion List.
+            roles = OperatorRoles.objects(operator = operatorId) 
+            for role in roles:
+                r_ = Roles.objects(id = role.id)
+                permissions.append([p for p in r_.permissions])
+            return jsonify(permissions)
+        except AttributeError as atterr:
+            return f"ERROR: {str(atterr)}"
+        except IndexError as notFound:
+            return f'Record with given id: `{operatorId}` is NOT FOUND!!!'                        
+        except ValidationError as err:
+            return err.message
+    else:
+        res = Response()
+        res.status_code = 401
+        return res
