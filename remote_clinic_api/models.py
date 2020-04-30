@@ -1,5 +1,5 @@
 from remote_clinic_api import db
-from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField  
+from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, ListField
 
 
 from marshmallow_mongoengine import ModelSchema
@@ -104,7 +104,9 @@ class Doctor(Document):
     name = StringField(max_length=255, required=True)
     surname = StringField(max_length=255, required=True)
     email = EmailField(required=True)
-    phone = StringField()
+    password = StringField(required=True)
+    tags = ListField(StringField(), default=list) # List of String TAGS 
+    phone = StringField(max_length=255)
     gender = StringField(max_length=32,required=True)
     address = DictField(required=True)
     image_path = StringField(required=True)
@@ -112,11 +114,11 @@ class Doctor(Document):
     online = BooleanField(required=True)
     specilization = StringField(max_length=255,required=True)
     about = StringField(max_length=255,required=True)
-    experience = StringField()
+    experience = StringField(max_length=255)
     pmdc_verified = BooleanField(required=True)
     pmdc_reg_num = StringField(required=True)
     verification_status = StringField(required=True)
-    verified_by = ObjectIdField(required=True)
+    verified_by = ObjectIdField()
     verification_date = DateTimeField()
 
 # defining schema for json serialization
