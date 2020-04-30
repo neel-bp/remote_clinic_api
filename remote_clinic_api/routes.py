@@ -174,3 +174,55 @@ def ddocuments(doctorId,documentId):
         res = Response()
         res.status_code = 402
         return res
+
+@app.route('/doctors/<doctorId>/reviews', methods=['GET','POST'])
+def docreviews(doctorId):
+    if request.method == 'GET':
+        try:
+            result = Reviews.objects(review_for = doctorId)  
+            jsonData = result.to_json()
+            return jsonData
+        except IndexError as notFound:
+            return f'Record with the id: `{doctorId}` is NOT FOUND!!!'            
+        except ValidationError as err:
+            return err.message
+    elif request.method == 'POST':
+        body = request.json
+        try: # Try to store info. 
+            review = Reviews(**body)
+            review.save()
+            return jsonify({"id": str(review.id)})
+        except FieldDoesNotExist as atterr:
+            return f"INCORRECT STRUCTURE: {str(atterr)}"
+        except ValidationError as error:
+            return error.message
+
+@app.route('/doctors/<doctorId>/reviews/<reviewId>', methods=['GET','PUT', 'DELETE'])
+def mod_docreviews(doctorId,reviewId):
+    if request.method == 'GET':
+        try:
+            result = Reviews.objects(id = reviewId, review_for = doctorId)  
+            jsonData = result.to_json()
+            return jsonData
+        except IndexError as notFound:
+            return f'Record with given id: `{reviewId}` is NOT FOUND!!!'                        
+        except ValidationError as err:
+            return err.message
+    elif request.method == 'PUT':
+        try:
+            body = request.json
+            result = Reviews.objects(id = reviewId, review_for = doctorId)
+            result[0].update(**body)
+            return jsonify({"id": reviewId, "review_for": doctorId})
+        except IndexError as notFound:
+            return f'Record with the id: `{id}` is NOT FOUND!!!'
+        except ValidationError as err:
+            return err.message        
+    elif request.method == 'DELETE':
+        try:
+            result = Reviews.objects(id = reviewId, review_for = doctorId)  
+            result[0].delete()
+            return jsonify({"documentId":reviewId,"ownerId":doctorId})
+        except ValidationError as err:
+            return err.message
+
