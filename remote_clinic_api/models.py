@@ -1,9 +1,5 @@
 from remote_clinic_api import db
-<<<<<<< HEAD
-from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, GenericReferenceField
-=======
-from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, ListField
->>>>>>> 4038889a35acd8478d1adee81bff5e17c6c7679b
+from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, GenericReferenceField, ListField
 
 
 from marshmallow_mongoengine import ModelSchema
@@ -89,7 +85,7 @@ class Doctor(db.Document):
     surname = StringField(max_length=255, required=True)
     email = EmailField(required=True)
     password = StringField(required=True)
-    tags = ListField(StringField(), default=list) # List of String TAGS 
+    tags = ListField(StringField()) # List of String TAGS 
     phone = StringField(max_length=255)
     gender = StringField(max_length=32,required=True)
     address = EmbeddedDocumentField(Address)
@@ -98,19 +94,11 @@ class Doctor(db.Document):
     online = BooleanField(default=False)
     specialization = StringField(max_length=255,required=True)
     about = StringField(max_length=255,required=True)
-<<<<<<< HEAD
     experience = StringField()
     pmdc_verified = BooleanField(default=False)
     pmdc_reg_num = StringField()
     verification_status = StringField(default='Pending')
     verified_by = ReferenceField('Operator')
-=======
-    experience = StringField(max_length=255)
-    pmdc_verified = BooleanField(required=True)
-    pmdc_reg_num = StringField(required=True)
-    verification_status = StringField(required=True)
-    verified_by = ObjectIdField()
->>>>>>> 4038889a35acd8478d1adee81bff5e17c6c7679b
     verification_date = DateTimeField()
 
 # defining schema for json serialization
@@ -164,7 +152,6 @@ class DDcoumentsSchema(ModelSchema):
     class Meta:
         model = DDocuments  
 
-<<<<<<< HEAD
 class Reviews(db.Document):
     rating = FloatField(max_value=5)
     review_by = GenericReferenceField() # Reviewer could be any
@@ -173,59 +160,7 @@ class Reviews(db.Document):
     for_name = StringField(max_length=255)
     review_date = DateTimeField(default=datetime.utcnow)
     comment = StringField()
-=======
-class Operator(Document):
-    name = StringField(max_length=255, required=True)
-    surname = StringField(max_length=255)
-    phone = StringField(max_length=255)
-    avatar = StringField()
-    dob = DateTimeField()
-    email = EmailField(unique=True, required=True)
-    address = DictField()
-    password = StringField(required=True)
-    doj = DateTimeField(default=datetime.utcnow)
-
->>>>>>> 4038889a35acd8478d1adee81bff5e17c6c7679b
 
 class ReviewsSchema(ModelSchema):
     class Meta:
-<<<<<<< HEAD
         model = Reviews
-=======
-        model = Operator
-
-
-class Permissions(EmbeddedDocument):
-    title = StringField(required=True)
-
-# defining schema for json serialization
-class PermisstionSchema(ModelSchema):
-    class Meta:
-        model = Permissions
-
-
-# Note: One Role can have multiple permissions: one to many relationship
-# Note: When creating new Role permissions should be already defined.
-class Roles(Document):
-    title = StringField(required=True)
-    permissions = EmbeddedDocumentListField(Permissions, required=True) # List of permissions
-
-
-# defining schema for json serialization
-class RolesSchema(ModelSchema):
-    class Meta:
-        model = Roles
-
-# Note: One Operator have one Role - one to one relationship.
-class OperatorRoles(Document):
-    operator = ObjectIdField(required=True)
-    role = ObjectIdField(required=True)
-
-
-# defining schema for json serialization
-class OperatorRolesSchema(ModelSchema):
-    class Meta:
-        model = OperatorRoles
-
-
->>>>>>> 4038889a35acd8478d1adee81bff5e17c6c7679b
