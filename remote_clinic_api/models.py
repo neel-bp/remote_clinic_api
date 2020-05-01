@@ -1,5 +1,5 @@
 from remote_clinic_api import db
-from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField  
+from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, ListField
 
 
 from marshmallow_mongoengine import ModelSchema
@@ -104,7 +104,9 @@ class Doctor(Document):
     name = StringField(max_length=255, required=True)
     surname = StringField(max_length=255, required=True)
     email = EmailField(required=True)
-    phone = StringField()
+    password = StringField(required=True)
+    tags = ListField(StringField(), default=list) # List of String TAGS 
+    phone = StringField(max_length=255)
     gender = StringField(max_length=32,required=True)
     address = EmbeddedDocumentField(Address)
     image_path = StringField(required=True)
@@ -112,7 +114,7 @@ class Doctor(Document):
     online = BooleanField(default=False)
     specialization = StringField(max_length=255,required=True)
     about = StringField(max_length=255,required=True)
-    experience = StringField()
+    experience = StringField(max_length=255)
     pmdc_verified = BooleanField(required=True)
     pmdc_reg_num = StringField(required=True)
     verification_status = StringField(required=True)
@@ -143,17 +145,53 @@ class DDcoumentsSchema(ModelSchema):
         model = DDocuments  
 
 class Operator(Document):
-    name = StringField()
-    surname = StringField()
-    phone = StringField()
+    name = StringField(max_length=255, required=True)
+    surname = StringField(max_length=255)
+    phone = StringField(max_length=255)
+    avatar = StringField()
     dob = DateTimeField()
-    email = EmailField()
-    address = EmbeddedDocumentField(Address)
-    password = StringField()
-    doj = DateTimeField()
+    email = EmailField(unique=True, required=True)
+    address = DictField()
+    password = StringField(required=True)
+    doj = DateTimeField(default=datetime.utcnow)
 
 
 # defining schema for json serialization
 class OperatorSchema(ModelSchema):
     class Meta:
         model = Operator
+
+
+class Permissions(EmbeddedDocument):
+    title = StringField(required=True)
+
+# defining schema for json serialization
+class PermisstionSchema(ModelSchema):
+    class Meta:
+        model = Permissions
+
+
+# Note: One Role can have multiple permissions: one to many relationship
+# Note: When creating new Role permissions should be already defined.
+class Roles(Document):
+    title = StringField(required=True)
+    permissions = EmbeddedDocumentListField(Permissions, required=True) # List of permissions
+
+
+# defining schema for json serialization
+class RolesSchema(ModelSchema):
+    class Meta:
+        model = Roles
+
+# Note: One Operator have one Role - one to one relationship.
+class OperatorRoles(Document):
+    operator = ObjectIdField(required=True)
+    role = ObjectIdField(required=True)
+
+
+# defining schema for json serialization
+class OperatorRolesSchema(ModelSchema):
+    class Meta:
+        model = OperatorRoles
+
+
