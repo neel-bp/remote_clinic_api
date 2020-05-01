@@ -161,28 +161,25 @@ def doctors(id):
         res.status_code = 402
         return res
 
-#TODO: have to refactor and apply serialization to the following two routes
 @app.route('/doctors/<doctorId>/documents', methods=['GET', 'POST'])
 def ddocument(doctorId):
     if request.method == 'GET':
         try:
-            result = DDocuments.objects(owner = doctorId)  
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with the id: `{doctorId}` is NOT FOUND!!!'            
+            result = DDocuments.objects.get_or_404(owner = doctorId)  
+            jsonData = DDocumentsSchema().dump(result)
+            return jsonify(jsonData)           
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'POST':
         body = request.json
         try: # Try to store info. 
-            ddocument = DDocuments(**body)
+            ddocument = DDocumentsSchema().load(body)
             ddocument.save()
             return jsonify({"id": str(ddocument.id)})
         except FieldDoesNotExist as atterr:
-            return f"INCORRECT STRUCTURE: {str(atterr)}"
+            return jsonify({'error':'incorrect structure'})
         except ValidationError as error:
-            return error.message
+            return jsonify({'error':err.message})
     else:
         res = Response()
         res.status_code = 402
@@ -192,35 +189,34 @@ def ddocument(doctorId):
 def ddocuments(doctorId,documentId):
     if request.method == 'GET':
         try:
-            result = DDocuments.objects(id = documentId, owner = doctorId)  
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with given id: `{documentId}` is NOT FOUND!!!'                        
+            result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)  
+            jsonData = DDocumentsSchema().dump(result)
+            return jsonify(jsonData)                        
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'PUT':
         try:
             body = request.json
-            result = DDocuments.objects(id = documentId, owner = doctorId)
-            result[0].update(**body)
+            result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)
+            result = DDocumentsSchema().dump(result)
+            result.update(body)
+            result.save()
             return jsonify({"id": documentId, "owner": doctorId})
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
         except ValidationError as err:
-            return err.message        
+            return jsonify({'error':err.message})
     elif request.method == 'DELETE':
         try:
-            result = DDocuments.objects(id = documentId, owner = doctorId)  
-            result[0].delete()
+            result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)  
+            result.delete()
             return jsonify({"documentId":documentId,"ownerId":doctorId})
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     else:
         res = Response()
         res.status_code = 402
         return res
 
+#TODO: have to refactor following routes
 @app.route('/doctors/<doctorId>/reviews', methods=['GET','POST'])
 def docreviews(doctorId):
     if request.method == 'GET':
