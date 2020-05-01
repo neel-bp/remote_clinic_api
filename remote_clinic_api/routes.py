@@ -165,20 +165,23 @@ def doctors(id):
 def ddocument(doctorId):
     if request.method == 'GET':
         try:
-            result = DDocuments.objects.get_or_404(owner = doctorId)  
-            jsonData = DDocumentsSchema().dump(result)
-            return jsonify(jsonData)           
+            document_list = []
+            result = DDocuments.objects(owner = doctorId)  
+            for i in result:
+                document_list.append(DDocumentsSchema().dump(i))
+            return jsonify(document_list)
         except ValidationError as err:
             return jsonify({'error':err.message})
     elif request.method == 'POST':
         body = request.json
         try: # Try to store info. 
+            body.update({'owner':doctorId})
             ddocument = DDocumentsSchema().load(body)
             ddocument.save()
             return jsonify({"id": str(ddocument.id)})
         except FieldDoesNotExist as atterr:
-            return jsonify({'error':'incorrect structure'})
-        except ValidationError as error:
+            return jsonify({'error':f'incorrect structure, {atterr.message}'})
+        except ValidationError as err:
             return jsonify({'error':err.message})
     else:
         res = Response()
@@ -200,6 +203,7 @@ def ddocuments(doctorId,documentId):
             result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)
             result = DDocumentsSchema().dump(result)
             result.update(body)
+            result = DDocumentsSchema().load(result)
             result.save()
             return jsonify({"id": documentId, "owner": doctorId})
         except ValidationError as err:
@@ -216,29 +220,34 @@ def ddocuments(doctorId,documentId):
         res.status_code = 402
         return res
 
-#TODO: have to refactor following routes
+
 @app.route('/doctors/<doctorId>/reviews', methods=['GET','POST'])
 def docreviews(doctorId):
     if request.method == 'GET':
         try:
-            result = Reviews.objects(review_for = doctorId)  
-            jsonData = result.to_json()
-            return jsonData
+            doctor = Doctor.objects.get_or_404(id=str(doctorId))
+            review_list = []
+            result = Reviews.objects(review_for = doctor)  
+            for i in result:
+                review_list.append(ReviewsSchema().dump(i))
+            return jsonify(review_list)
         except IndexError as notFound:
-            return f'Record with the id: `{doctorId}` is NOT FOUND!!!'            
+            return jsonify({'error':'no reviews of that doctor found'})            
         except ValidationError as err:
             return err.message
     elif request.method == 'POST':
         body = request.json
         try: # Try to store info. 
-            review = Reviews(**body)
+            body['review_for'] = str(doctorId)
+            review = ReviewsSchema().load(body)
             review.save()
             return jsonify({"id": str(review.id)})
         except FieldDoesNotExist as atterr:
-            return f"INCORRECT STRUCTURE: {str(atterr)}"
+            return jsonify({'INCORRECT STRUCTURE': atterr.message})
         except ValidationError as error:
-            return error.message
+            return jsonify({'error':error.message})
 
+#TODO: have to refactor following routes
 @app.route('/doctors/<doctorId>/reviews/<reviewId>', methods=['GET','PUT', 'DELETE'])
 def mod_docreviews(doctorId,reviewId):
     if request.method == 'GET':

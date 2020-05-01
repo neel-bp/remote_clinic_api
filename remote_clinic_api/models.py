@@ -142,7 +142,7 @@ class DDocuments(db.Document):
     issued_by_org = StringField(max_length=255, required=True)
     issued_date = DateTimeField(default=datetime.utcnow)
     img_path = StringField()
-    verification_status = StringField(max_length=64, required=True)
+    verification_status = StringField(default='Pending')
     verified_by = ReferenceField('Operator')
     verification_date = DateTimeField()
     rejection_cause = StringField()
@@ -154,9 +154,9 @@ class DDocumentsSchema(ModelSchema):
 
 class Reviews(db.Document):
     rating = FloatField(max_value=5)
-    review_by = GenericReferenceField() # Reviewer could be any
+    review_by = ObjectIdField() # Reviewer could be any
     reviewer_name = StringField(max_length=255)
-    review_for = GenericReferenceField() # Reviewed For could be any
+    review_for = ReferenceField('Doctor') # Reviewed For could be any
     for_name = StringField(max_length=255)
     review_date = DateTimeField(default=datetime.utcnow)
     comment = StringField()
