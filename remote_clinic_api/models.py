@@ -148,7 +148,7 @@ class DDocuments(db.Document):
     rejection_cause = StringField()
 
 # defining schema for json serialization
-class DDcoumentsSchema(ModelSchema):
+class DDocumentsSchema(ModelSchema):
     class Meta:
         model = DDocuments  
 
