@@ -1,5 +1,5 @@
 from remote_clinic_api import db
-from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField  
+from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, GenericReferenceField
 
 
 from marshmallow_mongoengine import ModelSchema
@@ -35,18 +35,7 @@ class PatientSchema(ModelSchema):
     class Meta:
         model = Patient
 
-class Reviews(db.Document):
-    rating = FloatField(max_value=5)
-    review_by = ObjectIdField(required=True) # Reviewer could be any
-    reviewer_name = StringField(max_length=255)
-    review_for = ObjectIdField(required=True) # Reviewed For could be any
-    for_name = StringField(max_length=255)
-    review_date = DateTimeField(default=datetime.utcnow)
-    comment = StringField()
 
-class ReviewsSchema(ModelSchema):
-    class Meta:
-        model = Reviews
 
 
 class Drug(EmbeddedDocument):
@@ -59,31 +48,7 @@ class DrugSchema(ModelSchema):
     class Meta:
         model = Drug
 
-## patient prescriptions
-class Prescription(db.Document):
-    prescribed_by = StringField()
-    #doctor_id = ReferenceField('Doctor') doctor id is used because if a user want to visit doctor page this id is used to find that doctor instead of doctor's name because name is aconflicting field multiple people can have same names
-    notes = StringField()
-    drugs = EmbeddedDocumentListField(Drug)
-    prescription_date = DateTimeField(datetime.utcnow)
-    prescribed_for = ReferenceField('Patient')
 
-class PrescriptionSchema(ModelSchema):
-    class Meta:
-        model = Prescription
-
-# patient interactions with doctors
-class Interaction(db.Document):
-    patient_id = ReferenceField('Patient')
-    #doctor_id = ReferenceField('Doctor')
-    doctor_name = StringField()
-    medium = StringField()
-    date = DateTimeField(default=datetime.utcnow)
-    interaction_type = StringField() # didnt use type because type is a reserved word in python
-
-class InteractionSchema(ModelSchema):
-    class Meta:
-        model = Interaction
 
 class Reports(db.Document):
     title = StringField()
@@ -98,51 +63,7 @@ class ReportSchema(ModelSchema):
     class Meta:
         model = Reports
 
-
-
-class Doctor(Document):
-    name = StringField(max_length=255, required=True)
-    surname = StringField(max_length=255, required=True)
-    email = EmailField(required=True)
-    phone = StringField()
-    gender = StringField(max_length=32,required=True)
-    address = EmbeddedDocumentField(Address)
-    image_path = StringField(required=True)
-    signup_date = DateTimeField(default=datetime.utcnow)
-    online = BooleanField(default=False)
-    specialization = StringField(max_length=255,required=True)
-    about = StringField(max_length=255,required=True)
-    experience = StringField()
-    pmdc_verified = BooleanField(required=True)
-    pmdc_reg_num = StringField(required=True)
-    verification_status = StringField(required=True)
-    verified_by = ObjectIdField()
-    verification_date = DateTimeField()
-
-# defining schema for json serialization
-class DoctorSchema(ModelSchema):
-    class Meta:
-        model = Doctor
-
-class DDocuments(Document):
-    owner = ObjectIdField(required=True)
-    title = StringField(max_length=255, required=True)
-    type_ = StringField(max_length=64, required=True)
-    description = StringField(max_length=255, required=True)
-    issued_by_org = StringField(max_length=255, required=True)
-    issued_date = DateTimeField(default=datetime.utcnow)
-    img_path = StringField(required=True),
-    verification_status = StringField(max_length=64, required=True),
-    verified_by = ObjectIdField(),
-    verification_date = DateTimeField(),
-    rejection_cause = StringField()
-
-# defining schema for json serialization
-class DDcoumentsSchema(ModelSchema):
-    class Meta:
-        model = DDocuments  
-
-class Operator(Document):
+class Operator(db.Document):
     name = StringField()
     surname = StringField()
     phone = StringField()
@@ -157,3 +78,87 @@ class Operator(Document):
 class OperatorSchema(ModelSchema):
     class Meta:
         model = Operator
+
+
+class Doctor(db.Document):
+    name = StringField(max_length=255, required=True)
+    surname = StringField(max_length=255, required=True)
+    email = EmailField(required=True)
+    phone = StringField()
+    gender = StringField(max_length=32,required=True)
+    address = EmbeddedDocumentField(Address)
+    image_path = StringField()
+    signup_date = DateTimeField(default=datetime.utcnow)
+    online = BooleanField(default=False)
+    specialization = StringField(max_length=255,required=True)
+    about = StringField(max_length=255,required=True)
+    experience = StringField()
+    pmdc_verified = BooleanField(default=False)
+    pmdc_reg_num = StringField()
+    verification_status = StringField(default='Pending')
+    verified_by = ReferenceField('Operator')
+    verification_date = DateTimeField()
+
+# defining schema for json serialization
+class DoctorSchema(ModelSchema):
+    class Meta:
+        model = Doctor
+
+## patient prescriptions
+class Prescription(db.Document):
+    prescribed_by = StringField()
+    doctor_id = ReferenceField('Doctor') 
+    notes = StringField()
+    drugs = EmbeddedDocumentListField(Drug)
+    prescription_date = DateTimeField(datetime.utcnow)
+    prescribed_for = ReferenceField('Patient')
+
+class PrescriptionSchema(ModelSchema):
+    class Meta:
+        model = Prescription
+
+# patient interactions with doctors
+class Interaction(db.Document):
+    patient_id = ReferenceField('Patient')
+    doctor_id = ReferenceField('Doctor')
+    doctor_name = StringField()
+    medium = StringField()
+    date = DateTimeField(default=datetime.utcnow)
+    interaction_type = StringField() # didnt use type because type is a reserved word in python
+
+class InteractionSchema(ModelSchema):
+    class Meta:
+        model = Interaction
+
+
+
+class DDocuments(db.Document):
+    owner = ReferenceField('Doctor', required=True)
+    title = StringField(max_length=255, required=True)
+    document_type = StringField(max_length=64, required=True)
+    description = StringField(max_length=255, required=True)
+    issued_by_org = StringField(max_length=255, required=True)
+    issued_date = DateTimeField(default=datetime.utcnow)
+    img_path = StringField()
+    verification_status = StringField(max_length=64, required=True)
+    verified_by = ReferenceField('Operator')
+    verification_date = DateTimeField()
+    rejection_cause = StringField()
+
+# defining schema for json serialization
+class DDcoumentsSchema(ModelSchema):
+    class Meta:
+        model = DDocuments  
+
+class Reviews(db.Document):
+    rating = FloatField(max_value=5)
+    review_by = GenericReferenceField() # Reviewer could be any
+    reviewer_name = StringField(max_length=255)
+    review_for = GenericReferenceField() # Reviewed For could be any
+    for_name = StringField(max_length=255)
+    review_date = DateTimeField(default=datetime.utcnow)
+    comment = StringField()
+
+class ReviewsSchema(ModelSchema):
+    class Meta:
+        model = Reviews

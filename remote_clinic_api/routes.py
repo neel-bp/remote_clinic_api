@@ -118,51 +118,50 @@ def doctor():
     elif request.method == 'POST': ## Add Doctor Record.
         body = request.json
         try: # Try to store doctor info. 
-            doctor = Doctor(**body)
+            doctor = DoctorSchema().load(body)
             doctor.save()
             return jsonify({'id': str(doctor.id) })
         except ValidationError as error:
-            return error.message
+            return jsonify({'error':error.message})
     else:
         res = Response()
         res.status_code = 402
         return res
 
+# refactoring done, all serialization stuff applied
 @app.route('/doctors/<id>', methods=['GET','PUT', 'DELETE'])
 def doctors(id):
     if request.method == 'GET': ## Return Single Doctor.
         try: # Try to get doctor info with the given id. 
-            result = Doctor.objects(id = id)
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Doctor.objects.get_or_404(id = id)
+            jsonData = DoctorSchema().dump(result)
+            return jsonify(jsonData)
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'PUT': ## Update Doctor.
         try:
             body = request.json
-            result = Doctor.objects(id = id)
-            result[0].update(**body)
-            return id
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Doctor.objects.get_or_404(id=str(id))
+            result_dic = DoctorSchema().dump(result)
+            result_dic.update(body)
+            updated_doctor = DoctorSchema().load(result_dic)
+            updated_doctor.save()
+            return jsonify({'message':'record updated successfully'})
         except ValidationError as err:
-            return err.message        
+            return jsonify({'error':err.message})
     elif request.method == 'DELETE': ## Delete Doctor.
         try:
-            result = Doctor.objects(id = id)
-            result[0].delete()
-            return id
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Doctor.objects.get_or_404(id = id)
+            result.delete()
+            return jsonify({'message':f'{id} doctor deleted successfully'})
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     else:
         res = Response()
         res.status_code = 402
         return res
 
+#TODO: have to refactor and apply serialization to the following two routes
 @app.route('/doctors/<doctorId>/documents', methods=['GET', 'POST'])
 def ddocument(doctorId):
     if request.method == 'GET':
