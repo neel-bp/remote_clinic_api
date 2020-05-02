@@ -180,7 +180,7 @@ def ddocument(doctorId):
             ddocument.save()
             return jsonify({"id": str(ddocument.id)})
         except FieldDoesNotExist as atterr:
-            return jsonify({'error':f'incorrect structure, {atterr.message}'})
+            return jsonify({'error':f'incorrect structure, {atterr}'})
         except ValidationError as err:
             return jsonify({'error':err.message})
     else:
@@ -275,7 +275,7 @@ def mod_docreviews(doctorId,reviewId):
         except ValidationError as err:
             return jsonify({'error':err.message})
 
-#TODO: have to refactor following routes
+
 @app.route('/operators', methods=['GET','POST'])
 def operator():
     if request.method == 'GET':
@@ -292,21 +292,22 @@ def operator():
         except TypeError as ve:
             end = None
             offset = None
+        
         result = Operator.objects[offset:end]
-        jsonData = result.to_json()
-        return jsonData
+        jsonData = []
+        for js in result:
+            jsonData.append(OperatorSchema().dump(js))
+        return jsonify(jsonData)
     elif request.method == 'POST':
         body = request.json
         try: 
-            operator = Operator(**body)
+            operator = OperatorSchema().load(body)
             operator.save()
             return jsonify({'id': str(operator.id) })
-        except NotUniqueError as emailAlreadyReg:
-            return "ERROR: Account already registered with the given email Address."
         except FieldDoesNotExist as atterr:
-            return f"INCORRECT STRUCTURE: {str(atterr)}"
+            return jsonify({'INCORRECT STRUCTURE': str(atterr)})
         except ValidationError as error:
-            return error.message
+            return jsonify({'error':error.message})
     else:
         res = Response()
         res.status_code = 401
@@ -316,37 +317,35 @@ def operator():
 def get_operator(id):
     if request.method == 'GET':
         try: 
-            result = Operator.objects(id = id)
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Operator.objects.get_or_404(id = id)
+            jsonData = OperatorSchema().dump(result)
+            return jsonify(jsonData)
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'PUT':
         try:
             body = request.json
-            result = Operator.objects(id = id)
-            result[0].update(**body)
-            return id
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Operator.objects.get_or_404(id = id)
+            result = OperatorSchema().dump(result)
+            result.update(body)
+            result = OperatorSchema().load(result)
+            result.save()
+            return jsonify({'message':f'operator {id} has been successfully updated'})
         except ValidationError as err:
-            return err.message        
+            return jsonify({'error':err.message})        
     elif request.method == 'DELETE':
         try:
-            result = Operator.objects(id = id)
-            result[0].delete()
-            return id
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Operator.objects.get_or_404(id = id)
+            result.delete()
+            return jsonify({'message':f'operator {id} has been successfully deleted'})
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     else:
         res = Response()
         res.status_code = 401
         return res
 
+#TODO: have to refactor following routes
 @app.route('/operators/<operatorId>/roles', methods=['GET','POST'])
 def operator_roles(operatorId):
     if request.method == 'GET':
