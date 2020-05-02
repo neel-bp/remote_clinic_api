@@ -230,54 +230,52 @@ def docreviews(doctorId):
             result = Reviews.objects(review_for = doctor)  
             for i in result:
                 review_list.append(ReviewsSchema().dump(i))
-            return jsonify(review_list)
-        except IndexError as notFound:
-            return jsonify({'error':'no reviews of that doctor found'})            
+            return jsonify(review_list)            
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'POST':
         body = request.json
         try: # Try to store info. 
             body['review_for'] = str(doctorId)
             review = ReviewsSchema().load(body)
+            review.for_name = str(review.review_for.name)+' '+str(review.review_for.surname)
             review.save()
             return jsonify({"id": str(review.id)})
         except FieldDoesNotExist as atterr:
-            return jsonify({'INCORRECT STRUCTURE': atterr.message})
+            return jsonify({'INCORRECT STRUCTURE': atterr})
         except ValidationError as error:
             return jsonify({'error':error.message})
 
-#TODO: have to refactor following routes
+
 @app.route('/doctors/<doctorId>/reviews/<reviewId>', methods=['GET','PUT', 'DELETE'])
 def mod_docreviews(doctorId,reviewId):
     if request.method == 'GET':
         try:
-            result = Reviews.objects(id = reviewId, review_for = doctorId)  
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with given id: `{reviewId}` is NOT FOUND!!!'                        
+            result = Reviews.objects.get_or_404(id = reviewId, review_for = doctorId)  
+            jsonData = ReviewsSchema().dump(result)
+            return jsonify(jsonData)                        
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'PUT':
         try:
             body = request.json
-            result = Reviews.objects(id = reviewId, review_for = doctorId)
-            result[0].update(**body)
+            result = Reviews.objects.get_or_404(id = reviewId, review_for = doctorId)
+            result = ReviewsSchema().dump(result)
+            result.update(body)
+            result = ReviewsSchema().load(result)
+            result.save()
             return jsonify({"id": reviewId, "review_for": doctorId})
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
         except ValidationError as err:
-            return err.message        
+            return jsonify({'error':err.message})        
     elif request.method == 'DELETE':
         try:
-            result = Reviews.objects(id = reviewId, review_for = doctorId)  
-            result[0].delete()
-            return jsonify({"documentId":reviewId,"ownerId":doctorId})
+            result = Reviews.objects.get_or_404(id = reviewId, review_for = doctorId)  
+            result.delete()
+            return jsonify({"message":f'review {reviewId} has been successfully deleted'})
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
 
-
+#TODO: have to refactor following routes
 @app.route('/operators', methods=['GET','POST'])
 def operator():
     if request.method == 'GET':
