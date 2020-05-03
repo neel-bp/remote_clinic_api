@@ -1,5 +1,5 @@
 from remote_clinic_api import db
-from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, GenericReferenceField, ListField
+from mongoengine import StringField, EmailField, DateTimeField, BooleanField, DictField, EmbeddedDocument, EmbeddedDocumentField, Document, FloatField, ReferenceField, ObjectIdField, EmbeddedDocumentListField, GenericReferenceField, ListField, ImageField
 
 
 from marshmallow_mongoengine import ModelSchema
@@ -24,7 +24,7 @@ class Patient(db.Document):
     email = EmailField()
     phone = StringField()
     gender = StringField()
-    image_path = StringField()
+    image = ImageField()
     signup_date = DateTimeField(default=datetime.utcnow)
     online = BooleanField()
     address = EmbeddedDocumentField(Address)
@@ -56,7 +56,7 @@ class Reports(db.Document):
     description = StringField()
     issued_by_org = StringField()
     issued_date = DateTimeField(default=datetime.utcnow)
-    file_path = StringField()
+    Image = ImageField()
     report_of = ReferenceField('Patient')
 
 class ReportSchema(ModelSchema):
@@ -98,12 +98,12 @@ class Doctor(db.Document):
     name = StringField(max_length=255, required=True)
     surname = StringField(max_length=255, required=True)
     email = EmailField(required=True)
-    password = StringField(required=True)
+    password = StringField()
     tags = ListField(StringField()) # List of String TAGS 
     phone = StringField(max_length=255)
     gender = StringField(max_length=32,required=True)
     address = EmbeddedDocumentField(Address)
-    image_path = StringField()
+    image = ImageField()
     signup_date = DateTimeField(default=datetime.utcnow)
     online = BooleanField(default=False)
     specialization = StringField(max_length=255,required=True)
@@ -155,7 +155,7 @@ class DDocuments(db.Document):
     description = StringField(max_length=255, required=True)
     issued_by_org = StringField(max_length=255, required=True)
     issued_date = DateTimeField(default=datetime.utcnow)
-    img_path = StringField()
+    image = ImageField()
     verification_status = StringField(default='Pending')
     verified_by = ReferenceField('Operator')
     verification_date = DateTimeField()

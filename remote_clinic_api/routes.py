@@ -1,5 +1,5 @@
 from remote_clinic_api import app, db
-from flask import jsonify, request
+from flask import jsonify, request, send_file
 from remote_clinic_api.models import *
 import json
 
@@ -486,3 +486,39 @@ def get_roles(id):
         res = Response()
         res.status_code = 401
         return res
+
+
+# image routes
+@app.route('/patients/<string:patient_id>/pic', methods=['GET','PUT','POST','PATCH'])
+def patient_pic(patient_id):
+    if request.method == 'POST' or request.method == 'PUT' or request.method == 'PATCH':
+        if 'file' not in request.files:
+            return jsonify({'error':'no file part'})
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error':'no file selected'})
+        patient = Patient.objects.get_or_404(id=patient_id)
+        patient.image.put(file)
+        patient.save()
+        return jsonify({'message':'image successfully uploaded'})
+    
+    elif request.method == 'GET':
+        patient = Patient.objects.get_or_404(id=patient_id)
+        return send_file(patient.image, attachment_filename=f'{patient.image.md5}.'+str(patient.image.format).lower())
+
+@app.route('/doctors/<string:doctor_id>/pic', methods=['GET','PUT','POST','PATCH'])
+def doctor_pic(doctor_id):
+    if request.method == 'POST' or request.method == 'PUT' or request.method == 'PATCH':
+        if 'file' not in request.files:
+            return jsonify({'error':'no file part'})
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error':'no file selected'})
+        doctor = Doctor.objects.get_or_404(id=doctor_id)
+        doctor.image.put(file)
+        doctor.save()
+        return jsonify({'message':'image successfully uploaded'})
+    
+    elif request.method == 'GET':
+        doctor = Doctor.objects.get_or_404(id=doctor_id)
+        return send_file(doctor.image, as_attachment=True, attachment_filename=f'{doctor.image.md5}.'+str(doctor.image.format).lower())
