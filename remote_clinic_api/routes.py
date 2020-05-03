@@ -345,66 +345,62 @@ def get_operator(id):
         res.status_code = 401
         return res
 
-#TODO: have to refactor following routes
+
 @app.route('/operators/<operatorId>/roles', methods=['GET','POST'])
 def operator_roles(operatorId):
     if request.method == 'GET':
         try:
-            result = OperatorRoles.objects(operator = operatorId)  
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with the id: `{operatorId}` is NOT FOUND!!!'            
+            result = Operator.objects.get_or_404(id = operatorId)
+            role_li = []
+            roles = result.roles
+            for i in roles:
+                role_li.append({'id':str(i.id),'title':i.title})  
+            return jsonify(role_li)            
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'POST':
         body = request.json
         try: # Try to store info. 
-            opRole = OperatorRoles(**body)
+            role = Roles.objects(title__icontains=body['role']).first()
+            opRole = Operator.objects.get_or_404(id = operatorId)
+            opRole.roles.append(role)
             opRole.save()
-            return jsonify({"id": str(opRole.id)})
+            return jsonify({'message':'role successfully added'})
         except FieldDoesNotExist as atterr:
-            return f"INCORRECT STRUCTURE: {str(atterr)}"
+            return jsonify({'error':atterr})
         except ValidationError as error:
-            return error.message
+            return jsonify({'error':error.message})
     else:
         res = Response()
         res.status_code = 401
         return res
 
-@app.route('/operators/<operatorId>/roles/<roleId>', methods=['GET','PUT','DELETE'])
+
+@app.route('/operators/<operatorId>/roles/<roleId>', methods=['GET','DELETE'])
 def get_operator_roles(operatorId, roleId):
     if request.method == 'GET':
         try:
-            result = OperatorRoles.objects(operator = operatorId, id = roleId)  
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with given id: `{roleId}` is NOT FOUND!!!'                        
+            role = Roles.objects.get_or_404(id=roleId)
+            result = Operator.objects.get_or_404(id = operatorId, roles__in=[role])  
+            jsonData = OperatorSchema().dump(result)
+            return jsonify(jsonData)
         except ValidationError as err:
             return err.message
-    elif request.method == 'PUT':
-        try:
-            body = request.json
-            result = OperatorRoles.objects(operator = operatorId, id = roleId)  
-            result[0].update(**body)
-            return jsonify({"id": roleId, "operatorId": operatorId})
-        except IndexError as notFound:
-            return f'Record with the id: `{roleId}` is NOT FOUND!!!'
-        except ValidationError as err:
-            return err.message        
     elif request.method == 'DELETE':
         try:
-            result = OperatorRoles.objects(operator = operatorId, id = roleId)  
-            result[0].delete()
-            return jsonify({"roleId":roleId, "operatorId":operatorId})
+            role = Roles.objects.get_or_404(id=roleId)  
+            operator = Operator.objects.get_or_404(id=operatorId, roles__in=[role])
+            operator.roles.remove(role)
+            operator.save()
+            return jsonify({'message':f'role {roleId} successfully deleted'})
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     else:
         res = Response()
         res.status_code = 401
         return res
 
+#TODO: have to refactor following routes
 @app.route('/operators/<operatorId>/permissions', methods=['GET'])
 def operator_permission(operatorId):
     if request.method == 'GET':

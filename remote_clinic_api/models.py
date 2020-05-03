@@ -63,6 +63,19 @@ class ReportSchema(ModelSchema):
     class Meta:
         model = Reports
 
+# Note: One Role can have multiple permissions: one to many relationship
+# Note: When creating new Role permissions should be already defined.
+class Roles(db.Document):
+    title = StringField(required=True)
+    permissions = ListField(StringField(), required=True) # List of permissions
+
+
+# defining schema for json serialization
+class RolesSchema(ModelSchema):
+    class Meta:
+        model = Roles
+
+
 class Operator(db.Document):
     name = StringField()
     surname = StringField()
@@ -72,6 +85,7 @@ class Operator(db.Document):
     address = EmbeddedDocumentField(Address)
     password = StringField()
     doj = DateTimeField()
+    roles = ListField(ReferenceField('Roles'))
 
 
 # defining schema for json serialization
@@ -165,34 +179,4 @@ class ReviewsSchema(ModelSchema):
     class Meta:
         model = Reviews
 
-class Permissions(EmbeddedDocument):
-    title = StringField(required=True)
 
-# defining schema for json serialization
-class PermisstionSchema(ModelSchema):
-    class Meta:
-        model = Permissions
-
-
-# Note: One Role can have multiple permissions: one to many relationship
-# Note: When creating new Role permissions should be already defined.
-class Roles(db.Document):
-    title = StringField(required=True)
-    permissions = EmbeddedDocumentListField(Permissions, required=True) # List of permissions
-
-
-# defining schema for json serialization
-class RolesSchema(ModelSchema):
-    class Meta:
-        model = Roles
-
-# Note: One Operator have one Role - one to one relationship.
-class OperatorRoles(db.Document):
-    operator = ReferenceField('Operator', required=True)
-    role = ReferenceField('Roles', required=True)
-
-
-# defining schema for json serialization
-class OperatorRolesSchema(ModelSchema):
-    class Meta:
-        model = OperatorRoles
