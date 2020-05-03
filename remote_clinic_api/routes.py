@@ -400,28 +400,27 @@ def get_operator_roles(operatorId, roleId):
         res.status_code = 401
         return res
 
-#TODO: have to refactor following routes
 @app.route('/operators/<operatorId>/permissions', methods=['GET'])
 def operator_permission(operatorId):
     if request.method == 'GET':
         try:
             permissions = [] # Create empty permisstion List.
-            roles = OperatorRoles.objects(operator = operatorId) 
+            operator = Operator.objects.get_or_404(id = operatorId)
+            roles = operator.roles 
             for role in roles:
-                r_ = Roles.objects(id = role.id)
-                permissions.append([p for p in r_.permissions])
-            return jsonify(permissions)
+                for p in role.permissions:
+                    permissions.append(p)
+            return jsonify({'permissions':permissions})
         except AttributeError as atterr:
-            return f"ERROR: {str(atterr)}"
-        except IndexError as notFound:
-            return f'Record with given id: `{operatorId}` is NOT FOUND!!!'                        
+            return jsonify({'error':str(atterr)})                       
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     else:
         res = Response()
         res.status_code = 401
         return res
 
+#TODO: have to refactor following routes
 @app.route('/roles', methods=['GET','POST'])
 def roles():
     if request.method == 'GET':
