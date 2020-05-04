@@ -1,5 +1,5 @@
 from remote_clinic_api import app, db
-from flask import jsonify, request, send_file
+from flask import jsonify, request, send_file, abort
 from remote_clinic_api.models import *
 import json
 
@@ -489,7 +489,7 @@ def get_roles(id):
 
 
 # image routes
-@app.route('/patients/<string:patient_id>/pic', methods=['GET','PUT','POST','PATCH'])
+@app.route('/patients/<string:patient_id>/pic', methods=['GET','PUT','POST','PATCH','DELETE'])
 def patient_pic(patient_id):
     if request.method == 'POST' or request.method == 'PUT' or request.method == 'PATCH':
         if 'file' not in request.files:
@@ -498,15 +498,27 @@ def patient_pic(patient_id):
         if file.filename == '':
             return jsonify({'error':'no file selected'})
         patient = Patient.objects.get_or_404(id=patient_id)
-        patient.image.put(file)
+        patient.image.replace(file)
         patient.save()
         return jsonify({'message':'image successfully uploaded'})
     
     elif request.method == 'GET':
         patient = Patient.objects.get_or_404(id=patient_id)
-        return send_file(patient.image, attachment_filename=f'{patient.image.md5}.'+str(patient.image.format).lower())
+        try:
+            return send_file(patient.image, attachment_filename=f'{patient.image.md5}.'+str(patient.image.format).lower())
+        except AttributeError:
+            abort(404)
 
-@app.route('/doctors/<string:doctor_id>/pic', methods=['GET','PUT','POST','PATCH'])
+    elif request.method == 'DELETE':
+        try:
+            patient = Patient.objects.get_or_404(id=patient_id)
+            patient.image.delete()
+            patient.save()
+            return jsonify({'message':'image deleted successfully'})
+        except Exception as e:
+            return jsonify({'error':e})
+
+@app.route('/doctors/<string:doctor_id>/pic', methods=['GET','PUT','POST','PATCH','DELETE'])
 def doctor_pic(doctor_id):
     if request.method == 'POST' or request.method == 'PUT' or request.method == 'PATCH':
         if 'file' not in request.files:
@@ -515,10 +527,22 @@ def doctor_pic(doctor_id):
         if file.filename == '':
             return jsonify({'error':'no file selected'})
         doctor = Doctor.objects.get_or_404(id=doctor_id)
-        doctor.image.put(file)
+        doctor.image.replace(file)
         doctor.save()
         return jsonify({'message':'image successfully uploaded'})
     
     elif request.method == 'GET':
         doctor = Doctor.objects.get_or_404(id=doctor_id)
-        return send_file(doctor.image, as_attachment=True, attachment_filename=f'{doctor.image.md5}.'+str(doctor.image.format).lower())
+        try:
+            return send_file(doctor.image, as_attachment=True, attachment_filename=f'{doctor.image.md5}.'+str(doctor.image.format).lower())
+        except AttributeError:
+            abort(404)
+
+    elif request.method == 'DELETE':
+        try:
+            doctor = Doctor.objects.get_or_404(id=doctor_pic)
+            doctor.image.delete()
+            doctor.save()
+            return jsonify({'message':'image successfully deleted'})
+        except Exception as e:
+            return jsonify({'error':e})
