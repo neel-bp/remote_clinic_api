@@ -534,15 +534,44 @@ def doctor_pic(doctor_id):
     elif request.method == 'GET':
         doctor = Doctor.objects.get_or_404(id=doctor_id)
         try:
-            return send_file(doctor.image, as_attachment=True, attachment_filename=f'{doctor.image.md5}.'+str(doctor.image.format).lower())
+            return send_file(doctor.image, attachment_filename=f'{doctor.image.md5}.'+str(doctor.image.format).lower())
         except AttributeError:
             abort(404)
 
     elif request.method == 'DELETE':
         try:
-            doctor = Doctor.objects.get_or_404(id=doctor_pic)
+            doctor = Doctor.objects.get_or_404(id=doctor_id)
             doctor.image.delete()
             doctor.save()
+            return jsonify({'message':'image successfully deleted'})
+        except Exception as e:
+            return jsonify({'error':e})
+
+@app.route('/documents/<string:document_id>/pic',methods=['GET','POST','PUt','PATCH','DELETE'])
+def document_pic(document_id):
+    if request.method == 'POST' or request.method == 'PUT' or request.method == 'PATCH':
+        if 'file' not in request.files:
+            return jsonify({'error':'no file part'})
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error':'no file selected'})
+        document = DDocuments.objects.get_or_404(id=document_id)
+        document.image.replace(file)
+        document.save()
+        return jsonify({'message':'image successfully uploaded'})
+    
+    elif request.method == 'GET':
+        document = DDocuments.objects.get_or_404(id=document_id)
+        try:
+            return send_file(document.image, attachment_filename=f'{document.image.md5}.'+str(document.image.format).lower())
+        except AttributeError:
+            abort(404)
+
+    elif request.method == 'DELETE':
+        try:
+            document = DDocuments.objects.get_or_404(id=document_id)
+            document.image.delete()
+            document.save()
             return jsonify({'message':'image successfully deleted'})
         except Exception as e:
             return jsonify({'error':e})
