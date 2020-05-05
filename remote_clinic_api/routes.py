@@ -1,4 +1,4 @@
-from remote_clinic_api import app, db
+from remote_clinic_api import app, db, jwt, bcrypt
 from flask import jsonify, request, send_file, abort
 from remote_clinic_api.models import *
 import json
@@ -7,6 +7,7 @@ from flask import Response
 from markupsafe import escape
 from datetime import datetime
 from mongoengine import ValidationError, FieldDoesNotExist, NotUniqueError
+from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
 
 @app.route('/')
 def hello():
@@ -31,6 +32,8 @@ def patients():
         patient_json = request.json
         patient_schema = PatientSchema()
         patient = patient_schema.load(patient_json)
+        password = patient.password
+        patient.password = bcrypt.generate_password_hash(password).decode('utf-8')
         patient.save()
         new_patient = patient_schema.dump(patient)
         return jsonify(new_patient)
@@ -119,6 +122,8 @@ def doctor():
         body = request.json
         try: # Try to store doctor info. 
             doctor = DoctorSchema().load(body)
+            password = doctor.password
+            doctor.password = bcrypt.generate_password_hash(password).decode('utf-8')
             doctor.save()
             return jsonify({'id': str(doctor.id) })
         except ValidationError as error:
@@ -574,3 +579,53 @@ def document_pic(document_id):
             return jsonify({'message':'image successfully deleted'})
         except Exception as e:
             return jsonify({'error':e})
+
+# authentication routes
+@app.route('/patients/auth', methods=['POST'])
+def patient_login():
+    if not request.is_json:
+        return jsonify({'error':'missing or invalid JSON'}), 400
+    try:
+        username = str(request.json['username'])
+        password = str(request.json['password'])
+    except KeyError:
+        return jsonify({'error':'no username or password key in request'}), 400
+    if not username:
+        return jsonify({'error':'missing username part'}), 400
+    if not password:
+        return jsonify({'error':'missing password part'}), 400
+    patient = Patient.objects(username=username).first()
+    if patient is None:
+        return jsonify({'error':'no account with that username found'}), 400
+    patient_username = patient.username
+    patient_password_hash = patient.password
+    if bcrypt.check_password_hash(patient_password_hash, password) == False:
+        return jsonify({'error':'wrong username or password'})
+    
+    access_token = create_access_token(identity=patient_username)
+    return jsonify({'access_token':access_token, 'id':str(patient.id)})
+
+@app.route('/doctors/auth', methods=['POST'])
+def doctor_login():
+    if not request.is_json:
+        return jsonify({'error':'missing or invalid JSON'}), 400
+    try:
+        username = str(request.json['username'])
+        password = str(request.json['password'])
+    except KeyError:
+        return jsonify({'error':'no username or password key in request'}), 400
+    if not username:
+        return jsonify({'error':'missing username part'}), 400
+    if not password:
+        return jsonify({'error':'missing password part'}), 400
+    doctor = Doctor.objects(username=username).first()
+    if doctor is None:
+        return jsonify({'error':'no account with that username found'}), 400
+    doctor_username = doctor.username
+    doctor_password_hash = doctor.password
+    if bcrypt.check_password_hash(doctor_password_hash, password) == False:
+        return jsonify({'error':'wrong username or password'})
+    
+    access_token = create_access_token(identity=doctor_username)
+    return jsonify({'access_token':access_token, 'id':str(doctor.id)})
+
