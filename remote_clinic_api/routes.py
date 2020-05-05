@@ -1,5 +1,5 @@
 from remote_clinic_api import app, db, jwt, bcrypt
-from flask import jsonify, request, send_file, abort
+from flask import jsonify, request, send_file, abort, make_response
 from remote_clinic_api.models import *
 import json
 
@@ -12,6 +12,10 @@ from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identi
 @app.route('/')
 def hello():
     return jsonify({'hello':'world'})
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_response(jsonify({'error': '404 Not found'}), 404)
 
 @app.route('/patients', methods = ['GET','POST'])
 def patients():
