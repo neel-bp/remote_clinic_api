@@ -438,16 +438,18 @@ def roles():
             end = None
             offset = None
         result = Roles.objects[offset:end]
-        jsonData = result.to_json()
-        return jsonData
+        jsonData=[]
+        for role in result:
+            jsonData.append(RolesSchema().dump(role))
+        return jsonify(jsonData)
     elif request.method == 'POST':
         body = request.json
         try: 
-            role = Roles(**body)
+            role = RolesSchema().load(body)
             role.save()
-            return jsonify({'id': str(role.id) })
+            return jsonify({'id':str(role.id)})
         except ValidationError as error:
-            return error.message
+            return jsonify({'error':error.message})
     else:
         res = Response()
         res.status_code = 401
@@ -456,32 +458,29 @@ def roles():
 def get_roles(id):
     if request.method == 'GET':
         try: 
-            result = Roles.objects(id = id)
-            jsonData = result.to_json()
-            return jsonData
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Roles.objects.get_or_404(id = id)
+            jsonData = RolesSchema().dump(result)
+            return jsonify(jsonData)
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     elif request.method == 'PUT':
         try:
             body = request.json
-            result = Roles.objects(id = id)
-            result[0].update(**body)
-            return id
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Roles.objects.get_or_404(id = id)
+            result = RolesSchema().dump(result)
+            result.update(body)
+            result = RolesSchema().load(result)
+            result.save()
+            return jsonify({'message':f'role {id} has been updated successfully'})
         except ValidationError as err:
-            return err.message   
+            return jsonify({'error':err.message})
     elif request.method == 'DELETE':
         try:
-            result = Roles.objects(id = id)
-            result[0].delete()
-            return id
-        except IndexError as notFound:
-            return f'Record with the id: `{id}` is NOT FOUND!!!'
+            result = Roles.objects.get_or_404(id = id)
+            result.delete()
+            return jsonify({'message':f'role {id} has been successfully deleted'})
         except ValidationError as err:
-            return err.message
+            return jsonify({'error':err.message})
     else:
         res = Response()
         res.status_code = 401
