@@ -614,22 +614,22 @@ def doctor_login():
     if not request.is_json:
         return jsonify({'error':'missing or invalid JSON'}), 400
     try:
-        username = str(request.json['username'])
+        email = str(request.json['email'])
         password = str(request.json['password'])
     except KeyError:
-        return jsonify({'error':'no username or password key in request'}), 400
-    if not username:
-        return jsonify({'error':'missing username part'}), 400
+        return jsonify({'error':'no email or password key in request'}), 400
+    if not email:
+        return jsonify({'error':'missing email part'}), 400
     if not password:
         return jsonify({'error':'missing password part'}), 400
-    doctor = Doctor.objects(username=username).first()
+    doctor = Doctor.objects(email=email).first()
     if doctor is None:
-        return jsonify({'error':'no account with that username found'}), 400
-    doctor_username = doctor.username
+        return jsonify({'error':'no account with that email found'}), 400
+    doctor_email = doctor.email
     doctor_password_hash = doctor.password
     if bcrypt.check_password_hash(doctor_password_hash, password) == False:
-        return jsonify({'error':'wrong username or password'})
+        return jsonify({'error':'wrong email or password'})
     
-    access_token = create_access_token(identity=doctor_username)
+    access_token = create_access_token(identity=doctor_email)
     return jsonify({'access_token':access_token, 'id':str(doctor.id)})
 
