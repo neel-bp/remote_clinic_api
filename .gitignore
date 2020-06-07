@@ -2,3 +2,4 @@ venv/*
 remote_clinic_api/__pycache__/*
 temp/*
 remote_clinic_api/secret/*
+*.pyc
