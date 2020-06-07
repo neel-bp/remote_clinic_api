@@ -1,2 +1,3 @@
 venv/*
 remote_clinic_api/__pycache__/*
+temp/*
