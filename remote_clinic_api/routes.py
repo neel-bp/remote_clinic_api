@@ -51,9 +51,12 @@ def get_patient(patient_id):
 
     elif request.method == 'PATCH' or request.method == 'PUT':
         updated_fields = request.json
+        old_patient = Patient.objects.get_or_404(id = str(patient_id))
+        old_patient_image = old_patient.image
         patient_dic = PatientSchema().dump(Patient.objects.get_or_404(id=str(patient_id)))
         patient_dic.update(updated_fields)
         updated_patient = PatientSchema().load(patient_dic)
+        updated_patient.image = old_patient_image
         updated_patient.save()
         return jsonify(PatientSchema().dump(updated_patient))
     
@@ -335,9 +338,11 @@ def get_operator(id):
         try:
             body = request.json
             result = Operator.objects.get_or_404(id = id)
+            old_image = result.image
             result = OperatorSchema().dump(result)
             result.update(body)
             result = OperatorSchema().load(result)
+            result.image = old_image
             result.save()
             return jsonify({'message':f'operator {id} has been successfully updated'})
         except ValidationError as err:
@@ -604,7 +609,7 @@ def patient_login():
     patient_username = patient.username
     patient_password_hash = patient.password
     if bcrypt.check_password_hash(patient_password_hash, password) == False:
-        return jsonify({'error':'wrong username or password'})
+        return jsonify({'error':'wrong username or password'}), 401
     
     access_token = create_access_token(identity=patient_username)
     return jsonify({'access_token':access_token, 'id':str(patient.id)})
@@ -628,7 +633,7 @@ def doctor_login():
     doctor_username = doctor.username
     doctor_password_hash = doctor.password
     if bcrypt.check_password_hash(doctor_password_hash, password) == False:
-        return jsonify({'error':'wrong username or password'})
+        return jsonify({'error':'wrong username or password'}), 401
     
     access_token = create_access_token(identity=doctor_username)
     return jsonify({'access_token':access_token, 'id':str(doctor.id)})
