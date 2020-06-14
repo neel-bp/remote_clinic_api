@@ -173,6 +173,18 @@ def doctors(id):
         res.status_code = 402
         return res
 
+# routes for displaying all document routes regardless of doctor
+@app.route('/documents', methods=['GET'])
+def documents_list():
+    try:
+        document_list = []
+        result = DDocuments.objects  
+        for i in result:
+            document_list.append(DDocumentsSchema().dump(i))
+        return jsonify(document_list)
+    except ValidationError as err:
+        return jsonify({'error':err.message})
+
 @app.route('/doctors/<doctorId>/documents', methods=['GET', 'POST'])
 def ddocument(doctorId):
     if request.method == 'GET':
