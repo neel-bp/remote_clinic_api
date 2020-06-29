@@ -667,3 +667,84 @@ def video_chat_token():
     b64 = base64.b64encode(serialized)
 
     return jsonify({'token':b64.decode()})
+
+# Appointment Route Handler...
+
+# [CREATE] and [GET ALL] ROUTE Handler
+@app.route('/appointments', methods=['GET', 'POST'])
+def appointment_data():
+    if request.method == 'GET': ## Return All Data.
+        limit = request.args.get('limit') # ?limit=Number
+        offset = request.args.get('offset') # ?offset=Number
+        doctorId = request.args.get('doctorId') # ?doctorId=ObjectId
+        patientId = request.args.get('patientId') # ?patientId=ObjectId
+        try:
+            if limit is not None: limit = int(limit)
+            if offset is not None: offset = int(offset)
+
+            if offset is None: end = limit
+            elif limit is None: end = None 
+            else: end = limit + offset
+
+        except TypeError as ve:
+            end = None
+            offset = None
+
+        if patientId is not None and doctorId is not None: # Both are provided.
+            result = Appointment.objects(patientId=patientId,doctorId=doctorId)[offset:end]
+        elif patientId is not None: # Patient Id is provided.
+            result = Appointment.objects(patientId=patientId)[offset:end]
+        elif doctorId is not None: # Doctor Id is provided.
+            result = Appointment.objects(doctorId=doctorId)[offset:end]
+        else: # None of is provided.
+            result = Appointment.objects()[offset:end]
+        r_list = []
+        for appoint in result:
+            r_list.append(AppointmentSchema().dump(appoint))
+        return jsonify(r_list)
+    elif request.method == 'POST': ## Add Record.
+        body = request.json
+        try: # Try to store info. 
+            appointment = AppointmentSchema().load(body)
+            appointment.save()
+            return jsonify({'id': str(appointment.id) })
+        except ValidationError as error:
+            return jsonify({'error':error.message})
+    else:
+        res = Response()
+        res.status_code = 402
+        return res
+
+# [GET] [UPDATE] [DELETE] Route Handler
+@app.route('/appointments/<id>', methods=['GET','PUT','DELETE'])
+def modify_appointment_data(id):
+    if request.method == 'GET':
+        try: 
+            result = Appointment.objects.get_or_404(id = id)
+            jsonData = AppointmentSchema().dump(result)
+            return jsonify(jsonData)
+        except ValidationError as err:
+            return jsonify({'error':err.message})
+    elif request.method == 'PUT':
+        try:
+            body = request.json
+            result = Appointment.objects.get_or_404(id = id)
+            result = AppointmentSchema().dump(result)
+            result.update(body)
+            result = AppointmentSchema().load(result)
+            result.save()
+            return jsonify({'message':f'appointment {id} has been successfully updated'})
+        except ValidationError as err:
+            return jsonify({'error':err.message})        
+    elif request.method == 'DELETE':
+        try:
+            result = Appointment.objects.get_or_404(id = id)
+            result.delete()
+            return jsonify({'message':f'appointment {id} has been successfully deleted'})
+        except ValidationError as err:
+            return jsonify({'error':err.message})
+    else:
+        res = Response()
+        res.status_code = 401
+        return res
+        
