@@ -180,3 +180,16 @@ class ReviewsSchema(ModelSchema):
         model = Reviews
 
 
+class Appointment(db.Document):
+    patientId = ReferenceField('Patient')
+    doctorId = ReferenceField('Doctor')
+    appTime = StringField(max_length=255)
+    appDate = StringField(max_length=255) 
+    createdOn = DateTimeField(default=datetime.utcnow)
+    token = StringField(max_length=255)
+    status = StringField(max_length=255)
+    duration = StringField(max_length=255)
+
+class AppointmentSchema(ModelSchema):
+    class Meta:
+        model = Appointment
