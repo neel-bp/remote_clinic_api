@@ -7,7 +7,9 @@ from flask import Response
 from markupsafe import escape
 from datetime import datetime
 from mongoengine import ValidationError, FieldDoesNotExist, NotUniqueError
+from marshmallow.exceptions import ValidationError as MValidationError
 from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identity
+
 
 @app.route('/')
 def hello():
@@ -132,13 +134,15 @@ def doctor():
             return jsonify({'id': str(doctor.id) })
         except ValidationError as error:
             return jsonify({'error':error.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     else:
         res = Response()
         res.status_code = 402
         return res
 
 # refactoring done, all serialization stuff applied
-@app.route('/doctors/<id>', methods=['GET','PUT', 'DELETE'])
+@app.route('/doctors/<id>', methods=['GET','PUT', 'PATCH', 'DELETE'])
 def doctors(id):
     if request.method == 'GET': ## Return Single Doctor.
         try: # Try to get doctor info with the given id. 
@@ -147,7 +151,7 @@ def doctors(id):
             return jsonify(jsonData)
         except ValidationError as err:
             return jsonify({'error':err.message})
-    elif request.method == 'PUT': ## Update Doctor.
+    elif request.method == 'PUT' or request.method == 'PATCH': ## Update Doctor.
         try:
             body = request.json
             result = Doctor.objects.get_or_404(id=str(id))
@@ -158,6 +162,8 @@ def doctors(id):
             return jsonify({'message':'record updated successfully'})
         except ValidationError as err:
             return jsonify({'error':err.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     elif request.method == 'DELETE': ## Delete Doctor.
         try:
             result = Doctor.objects.get_or_404(id = id)
@@ -192,12 +198,14 @@ def ddocument(doctorId):
             return jsonify({'error':f'incorrect structure, {atterr}'})
         except ValidationError as err:
             return jsonify({'error':err.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     else:
         res = Response()
         res.status_code = 402
         return res
 
-@app.route('/doctors/<doctorId>/documents/<documentId>', methods=['GET','PUT', 'DELETE'])
+@app.route('/doctors/<doctorId>/documents/<documentId>', methods=['GET','PUT', 'PATCH', 'DELETE'])
 def ddocuments(doctorId,documentId):
     if request.method == 'GET':
         try:
@@ -206,7 +214,7 @@ def ddocuments(doctorId,documentId):
             return jsonify(jsonData)                        
         except ValidationError as err:
             return jsonify({'error':err.message})
-    elif request.method == 'PUT':
+    elif request.method == 'PUT' or request.method == 'PATCH':
         try:
             body = request.json
             result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)
@@ -217,6 +225,8 @@ def ddocuments(doctorId,documentId):
             return jsonify({"id": documentId, "owner": doctorId})
         except ValidationError as err:
             return jsonify({'error':err.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     elif request.method == 'DELETE':
         try:
             result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)  
@@ -254,9 +264,11 @@ def docreviews(doctorId):
             return jsonify({'INCORRECT STRUCTURE': atterr})
         except ValidationError as error:
             return jsonify({'error':error.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
 
 
-@app.route('/doctors/<doctorId>/reviews/<reviewId>', methods=['GET','PUT', 'DELETE'])
+@app.route('/doctors/<doctorId>/reviews/<reviewId>', methods=['GET','PUT','PATCH', 'DELETE'])
 def mod_docreviews(doctorId,reviewId):
     if request.method == 'GET':
         try:
@@ -265,7 +277,7 @@ def mod_docreviews(doctorId,reviewId):
             return jsonify(jsonData)                        
         except ValidationError as err:
             return jsonify({'error':err.message})
-    elif request.method == 'PUT':
+    elif request.method == 'PUT' or request.method == 'PATCH':
         try:
             body = request.json
             result = Reviews.objects.get_or_404(id = reviewId, review_for = doctorId)
@@ -276,6 +288,8 @@ def mod_docreviews(doctorId,reviewId):
             return jsonify({"id": reviewId, "review_for": doctorId})
         except ValidationError as err:
             return jsonify({'error':err.message})        
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     elif request.method == 'DELETE':
         try:
             result = Reviews.objects.get_or_404(id = reviewId, review_for = doctorId)  
@@ -317,12 +331,14 @@ def operator():
             return jsonify({'INCORRECT STRUCTURE': str(atterr)})
         except ValidationError as error:
             return jsonify({'error':error.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     else:
         res = Response()
         res.status_code = 401
         return res
 
-@app.route('/operators/<id>', methods=['GET','PUT','DELETE'])
+@app.route('/operators/<id>', methods=['GET','PUT', 'PATCH', 'DELETE'])
 def get_operator(id):
     if request.method == 'GET':
         try: 
@@ -331,7 +347,7 @@ def get_operator(id):
             return jsonify(jsonData)
         except ValidationError as err:
             return jsonify({'error':err.message})
-    elif request.method == 'PUT':
+    elif request.method == 'PUT' or request.method == 'PATCH':
         try:
             body = request.json
             result = Operator.objects.get_or_404(id = id)
@@ -342,6 +358,8 @@ def get_operator(id):
             return jsonify({'message':f'operator {id} has been successfully updated'})
         except ValidationError as err:
             return jsonify({'error':err.message})        
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     elif request.method == 'DELETE':
         try:
             result = Operator.objects.get_or_404(id = id)
@@ -459,11 +477,13 @@ def roles():
             return jsonify({'id':str(role.id)})
         except ValidationError as error:
             return jsonify({'error':error.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     else:
         res = Response()
         res.status_code = 401
         return res  
-@app.route('/roles/<id>', methods=['GET','PUT','DELETE'])
+@app.route('/roles/<id>', methods=['GET','PUT', 'PATCH', 'DELETE'])
 def get_roles(id):
     if request.method == 'GET':
         try: 
@@ -472,7 +492,7 @@ def get_roles(id):
             return jsonify(jsonData)
         except ValidationError as err:
             return jsonify({'error':err.message})
-    elif request.method == 'PUT':
+    elif request.method == 'PUT' or request.method == 'PATCH':
         try:
             body = request.json
             result = Roles.objects.get_or_404(id = id)
@@ -483,6 +503,8 @@ def get_roles(id):
             return jsonify({'message':f'role {id} has been updated successfully'})
         except ValidationError as err:
             return jsonify({'error':err.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     elif request.method == 'DELETE':
         try:
             result = Roles.objects.get_or_404(id = id)
@@ -555,7 +577,7 @@ def doctor_pic(doctor_id):
         except Exception as e:
             return jsonify({'error':e})
 
-@app.route('/documents/<string:document_id>/pic',methods=['GET','POST','PUt','PATCH','DELETE'])
+@app.route('/documents/<string:document_id>/pic',methods=['GET','POST','PUT','PATCH','DELETE'])
 def document_pic(document_id):
     if request.method == 'POST' or request.method == 'PUT' or request.method == 'PATCH':
         if 'file' not in request.files:
@@ -710,13 +732,15 @@ def appointment_data():
             return jsonify({'id': str(appointment.id) })
         except ValidationError as error:
             return jsonify({'error':error.message})
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     else:
         res = Response()
         res.status_code = 402
         return res
 
 # [GET] [UPDATE] [DELETE] Route Handler
-@app.route('/appointments/<id>', methods=['GET','PUT','DELETE'])
+@app.route('/appointments/<id>', methods=['GET','PUT', 'PATCH' ,'DELETE'])
 def modify_appointment_data(id):
     if request.method == 'GET':
         try: 
@@ -725,7 +749,7 @@ def modify_appointment_data(id):
             return jsonify(jsonData)
         except ValidationError as err:
             return jsonify({'error':err.message})
-    elif request.method == 'PUT':
+    elif request.method == 'PUT' or request.method == 'PATCH':
         try:
             body = request.json
             result = Appointment.objects.get_or_404(id = id)
@@ -736,6 +760,8 @@ def modify_appointment_data(id):
             return jsonify({'message':f'appointment {id} has been successfully updated'})
         except ValidationError as err:
             return jsonify({'error':err.message})        
+        except MValidationError as err:
+            return jsonify({'error': err.messages})
     elif request.method == 'DELETE':
         try:
             result = Appointment.objects.get_or_404(id = id)
