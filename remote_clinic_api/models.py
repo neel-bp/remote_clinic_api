@@ -98,6 +98,7 @@ class Doctor(db.Document):
     name = StringField(max_length=255, required=True)
     surname = StringField(max_length=255, required=True)
     email = EmailField(required=True)
+    username = StringField(required=True)
     password = StringField()
     tags = ListField(StringField()) # List of String TAGS 
     phone = StringField(max_length=255)
@@ -150,6 +151,7 @@ class InteractionSchema(ModelSchema):
 
 class DDocuments(db.Document):
     owner = ReferenceField('Doctor', required=True)
+    owner_name = StringField()
     title = StringField(max_length=255, required=True)
     document_type = StringField(max_length=64, required=True)
     description = StringField(max_length=255, required=True)
