@@ -36,8 +36,8 @@ def read_file(path):
     try:
         f = open(path, "r+b")
         return f.read()
-    except e:
-        print("Could not read file: %s error %s  ", path, e)
+    except Exception as ex:
+        print("Could not read file: %s error %s  ", path, ex)
         exit(3)
 
 def to_bytes(o):
