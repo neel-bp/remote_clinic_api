@@ -95,20 +95,20 @@ class OperatorSchema(ModelSchema):
 
 
 class Doctor(db.Document):
-    name = StringField(max_length=255, required=True)
-    surname = StringField(max_length=255, required=True)
-    email = EmailField(required=True)
-    username = StringField(required=True)
+    name = StringField(max_length=255)
+    surname = StringField(max_length=255)
+    email = EmailField()
+    username = StringField()
     password = StringField()
     tags = ListField(StringField()) # List of String TAGS 
     phone = StringField(max_length=255)
-    gender = StringField(max_length=32,required=True)
+    gender = StringField(max_length=32)
     address = EmbeddedDocumentField(Address)
     image = ImageField()
     signup_date = DateTimeField(default=datetime.utcnow)
     online = BooleanField(default=False)
-    specialization = StringField(max_length=255,required=True)
-    about = StringField(max_length=255,required=True)
+    specialization = StringField(max_length=255)
+    about = StringField(max_length=255)
     experience = StringField()
     pmdc_verified = BooleanField(default=False)
     pmdc_reg_num = StringField()
@@ -185,10 +185,14 @@ class ReviewsSchema(ModelSchema):
 class Appointment(db.Document):
     patientId = ReferenceField('Patient')
     doctorId = ReferenceField('Doctor')
+    patientName = StringField(max_length=255)
+    doctorName = StringField(max_length=255)
+    patientAvatar = StringField()
+    doctorAvatar = StringField()
     appTime = StringField(max_length=255)
     appDate = StringField(max_length=255) 
     createdOn = DateTimeField(default=datetime.utcnow)
-    token = StringField(max_length=255)
+    token = StringField()
     status = StringField(max_length=255)
     duration = StringField(max_length=255)
 
