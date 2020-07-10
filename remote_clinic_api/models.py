@@ -150,12 +150,12 @@ class InteractionSchema(ModelSchema):
 
 
 class DDocuments(db.Document):
-    owner = ReferenceField('Doctor', required=True)
+    owner = ReferenceField('Doctor')
     owner_name = StringField()
-    title = StringField(max_length=255, required=True)
-    document_type = StringField(max_length=64, required=True)
-    description = StringField(max_length=255, required=True)
-    issued_by_org = StringField(max_length=255, required=True)
+    title = StringField(max_length=255)
+    document_type = StringField(max_length=64)
+    description = StringField(max_length=255)
+    issued_by_org = StringField(max_length=255)
     issued_date = DateTimeField(default=datetime.utcnow)
     image = ImageField()
     verification_status = StringField(default='Pending')
