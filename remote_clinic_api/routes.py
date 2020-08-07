@@ -70,7 +70,11 @@ def get_patient(patient_id):
 @app.route('/patients/<string:patient_id>/prescriptions',methods=['GET','POST'])
 def get_prescriptions(patient_id):
     if request.method == 'GET':
-        Prescription_objects = Prescription.objects(prescribed_for=str(patient_id))
+        appointmentId = request.args.get('appointmentId')
+        if appointmentId is not None:
+            Prescription_objects = Prescription.objects(prescribed_for=str(patient_id),appointmentId = str(appointmentId))
+        else:
+            Prescription_objects = Prescription.objects(prescribed_for=str(patient_id))
         prescription_schema = PrescriptionSchema()
         pres_list = []
         for i in Prescription_objects:

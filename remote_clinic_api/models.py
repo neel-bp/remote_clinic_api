@@ -40,8 +40,10 @@ class PatientSchema(ModelSchema):
 
 class Drug(EmbeddedDocument):
     name = StringField()
+    d_type = StringField()
     dose = StringField()
     time = StringField()
+    for_days = StringField()
     description = StringField()
 
 class DrugSchema(ModelSchema):
@@ -121,18 +123,6 @@ class DoctorSchema(ModelSchema):
     class Meta:
         model = Doctor
 
-## patient prescriptions
-class Prescription(db.Document):
-    prescribed_by = StringField()
-    doctor_id = ReferenceField('Doctor') 
-    notes = StringField()
-    drugs = EmbeddedDocumentListField(Drug)
-    prescription_date = DateTimeField(datetime.utcnow)
-    prescribed_for = ReferenceField('Patient')
-
-class PrescriptionSchema(ModelSchema):
-    class Meta:
-        model = Prescription
 
 # patient interactions with doctors
 class Interaction(db.Document):
@@ -199,3 +189,19 @@ class Appointment(db.Document):
 class AppointmentSchema(ModelSchema):
     class Meta:
         model = Appointment
+
+## patient prescriptions
+class Prescription(db.Document):
+    prescribed_by = ReferenceField('Doctor')
+    appointmentId = ReferenceField('Appointment')
+    notes = StringField()
+    drugs = EmbeddedDocumentListField(Drug)
+    prescription_date = DateTimeField(datetime.utcnow)
+    prescribed_for = ReferenceField('Patient')
+
+class PrescriptionSchema(ModelSchema):
+    class Meta:
+        model = Prescription
+
+
+
