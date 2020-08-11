@@ -162,9 +162,11 @@ def doctors(id):
         try:
             body = request.json
             result = Doctor.objects.get_or_404(id=str(id))
+            result_image = result.image
             result_dic = DoctorSchema().dump(result)
             result_dic.update(body)
             updated_doctor = DoctorSchema().load(result_dic)
+            updated_doctor.image = result_image
             updated_doctor.save()
             return jsonify({'message':'record updated successfully'})
         except ValidationError as err:
@@ -238,8 +240,10 @@ def ddocuments(doctorId,documentId):
             body = request.json
             result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)
             result = DDocumentsSchema().dump(result)
+            result_image = result.image
             result.update(body)
             result = DDocumentsSchema().load(result)
+            result.image = result_image
             result.save()
             return jsonify({"id": documentId, "owner": doctorId})
         except ValidationError as err:
