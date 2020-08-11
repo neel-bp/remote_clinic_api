@@ -239,10 +239,10 @@ def ddocuments(doctorId,documentId):
         try:
             body = request.json
             result = DDocuments.objects.get_or_404(id = documentId, owner = doctorId)
-            result = DDocumentsSchema().dump(result)
+            result_dic = DDocumentsSchema().dump(result)
             result_image = result.image
-            result.update(body)
-            result = DDocumentsSchema().load(result)
+            result_dic.update(body)
+            result = DDocumentsSchema().load(result_dic)
             result.image = result_image
             result.save()
             return jsonify({"id": documentId, "owner": doctorId})
