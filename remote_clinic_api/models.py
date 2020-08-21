@@ -118,6 +118,10 @@ class Doctor(db.Document):
     verified_by = ReferenceField('Operator')
     verification_date = DateTimeField()
 
+    meta = {
+        'indexes':['$name']
+    }
+
 # defining schema for json serialization
 class DoctorSchema(ModelSchema):
     class Meta:

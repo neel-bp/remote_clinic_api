@@ -115,6 +115,8 @@ def doctor():
     if request.method == 'GET': ## Return All Doctors List.
         limit = request.args.get('limit')
         offset = request.args.get('offset')
+        nameparam = request.args.get('name')
+        tag = request.args.get('tag')
         try:
             if limit is not None: limit = int(limit)
             if offset is not None: offset = int(offset)
@@ -126,7 +128,15 @@ def doctor():
         except TypeError as ve:
             end = None
             offset = None
-        result = Doctor.objects[offset:end]
+        if nameparam == None and tag == None:
+            result = Doctor.objects[offset:end]
+        elif nameparam == None and tag != None:
+            result = Doctor.objects(tags=tag)
+        elif nameparam != None and tag == None:
+            result = Doctor.objects.search_text(nameparam)
+        elif nameparam != None and tag != None:
+            result = Doctor.objects(tags=tag).search_text(nameparam)
+        
         doc_list = []
         for docs in result:
             doc_list.append(DoctorSchema().dump(docs))
