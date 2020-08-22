@@ -26,7 +26,7 @@ class Patient(db.Document):
     gender = StringField()
     image = ImageField()
     signup_date = DateTimeField(default=datetime.utcnow)
-    online = BooleanField()
+    online = BooleanField(default=False)
     address = EmbeddedDocumentField(Address)
 
 
@@ -118,6 +118,10 @@ class Doctor(db.Document):
     verified_by = ReferenceField('Operator')
     verification_date = DateTimeField()
 
+    meta = {
+        'indexes':['$name']
+    }
+
 # defining schema for json serialization
 class DoctorSchema(ModelSchema):
     class Meta:
@@ -183,7 +187,7 @@ class Appointment(db.Document):
     appDate = StringField(max_length=255) 
     createdOn = DateTimeField(default=datetime.utcnow)
     token = StringField()
-    status = StringField(max_length=255)
+    status = StringField(max_length=255, default='Pending')
     duration = StringField(max_length=255)
 
 class AppointmentSchema(ModelSchema):
