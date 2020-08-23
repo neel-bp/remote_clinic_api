@@ -115,8 +115,8 @@ def doctor():
     if request.method == 'GET': ## Return All Doctors List.
         limit = request.args.get('limit')
         offset = request.args.get('offset')
-        nameparam = request.args.get('name')
-        tag = request.args.get('tag')
+        nameparam = (request.args.get('name')).lower()
+        tag = (request.args.get('tag')).lower()
         try:
             if limit is not None: limit = int(limit)
             if offset is not None: offset = int(offset)
