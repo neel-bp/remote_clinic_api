@@ -115,8 +115,8 @@ def doctor():
     if request.method == 'GET': ## Return All Doctors List.
         limit = request.args.get('limit')
         offset = request.args.get('offset')
-        nameparam = (request.args.get('name')).lower()
-        tag = (request.args.get('tag')).lower()
+        nameparam = (request.args.get('name'))
+        tag = (request.args.get('tag'))
         try:
             if limit is not None: limit = int(limit)
             if offset is not None: offset = int(offset)
@@ -131,11 +131,11 @@ def doctor():
         if nameparam == None and tag == None:
             result = Doctor.objects[offset:end]
         elif nameparam == None and tag != None:
-            result = Doctor.objects(tags=tag)
+            result = Doctor.objects(tags=tag.lower())
         elif nameparam != None and tag == None:
-            result = Doctor.objects.search_text(nameparam)
+            result = Doctor.objects.search_text(nameparam.lower())
         elif nameparam != None and tag != None:
-            result = Doctor.objects(tags=tag).search_text(nameparam)
+            result = Doctor.objects(tags=tag.lower()).search_text(nameparam.lower())
         
         doc_list = []
         for docs in result:
