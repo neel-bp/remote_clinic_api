@@ -128,14 +128,14 @@ def doctor():
         except TypeError as ve:
             end = None
             offset = None
-        if nameparam == None and tag == None:
+        if nameparam is None and tag is None:
             result = Doctor.objects[offset:end]
-        elif nameparam == None and tag != None:
-            result = Doctor.objects(tags=tag.lower())
-        elif nameparam != None and tag == None:
+        elif nameparam is None and tag is not None:
+            result = Doctor.objects(tags__icontains=tag.lower())
+        elif nameparam is not None and tag is None:
             result = Doctor.objects.search_text(nameparam.lower())
-        elif nameparam != None and tag != None:
-            result = Doctor.objects(tags=tag.lower()).search_text(nameparam.lower())
+        elif nameparam is not None and tag is not None:
+            result = Doctor.objects(tags__icontains=tag.lower()).search_text(nameparam.lower())
         
         doc_list = []
         for docs in result:
