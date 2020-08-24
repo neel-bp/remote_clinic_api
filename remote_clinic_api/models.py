@@ -197,10 +197,11 @@ class AppointmentSchema(ModelSchema):
 ## patient prescriptions
 class Prescription(db.Document):
     prescribed_by = ReferenceField('Doctor')
+    by_name = StringField()
     appointmentId = ReferenceField('Appointment')
     notes = StringField()
     drugs = EmbeddedDocumentListField(Drug)
-    prescription_date = DateTimeField(datetime.utcnow)
+    date = DateTimeField(default=datetime.utcnow)
     prescribed_for = ReferenceField('Patient')
 
 class PrescriptionSchema(ModelSchema):
