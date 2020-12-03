@@ -13,7 +13,7 @@ from flask_jwt_extended import jwt_required, create_access_token, get_jwt_identi
 
 @app.route('/')
 def hello():
-    return jsonify({'hello':'world'})
+    return jsonify({'hello':'Welcome to Remote Clinic Api'})
 
 @app.errorhandler(404)
 def not_found(error):
@@ -691,39 +691,39 @@ def doctor_login():
     return jsonify({'access_token':access_token, 'id':str(doctor.id)})
 
 # Load api keys...
-import json
-with open('./remote_clinic_api/secret/vidyo.io.json', 'r') as j:
-    data = json.load(j)
+# import json
+# with open('./remote_clinic_api/secret/vidyo.io.json', 'r') as j:
+#     data = json.load(j)
     
-appName = data['appName']
-appId = data['appId']
-apiKey = data['apiKey']
+# appName = data['appName']
+# appId = data['appId']
+# apiKey = data['apiKey']
 
-import base64
-from remote_clinic_api.GenerateToken import Token 
+# import base64
+# from remote_clinic_api.GenerateToken import Token
 
-# Route for generating token
-@app.route('/video/auth', methods=['POST'])
-def video_chat_token():
-    if not request.is_json:
-        return jsonify({'error':'missing or invalid JSON'}), 400
-    try:
-        id = str(request.json['id'])
-        userName = str(request.json['username'])
-    except KeyError:
-        return jsonify({'error':'no id or username key in request'}), 400
-    if not id:
-        return jsonify({'error':'id id part'}), 400
-    if not userName:
-        return jsonify({'error':'missing username part'}), 400
+# # Route for generating token
+# @app.route('/video/auth', methods=['POST'])
+# def video_chat_token():
+#     if not request.is_json:
+#         return jsonify({'error':'missing or invalid JSON'}), 400
+#     try:
+#         id = str(request.json['id'])
+#         userName = str(request.json['username'])
+#     except KeyError:
+#         return jsonify({'error':'no id or username key in request'}), 400
+#     if not id:
+#         return jsonify({'error':'id id part'}), 400
+#     if not userName:
+#         return jsonify({'error':'missing username part'}), 400
 
-    # TODO: Valadating user credentials or validate it using middleware
+#     # TODO: Valadating user credentials or validate it using middleware
 
-    token = Token(key=apiKey, appID=appId,userName=userName,vCardFile=None, expires=60 * 10)
-    serialized = token.serialize()
-    b64 = base64.b64encode(serialized)
+#     token = Token(key=apiKey, appID=appId,userName=userName,vCardFile=None, expires=60 * 10)
+#     serialized = token.serialize()
+#     b64 = base64.b64encode(serialized)
 
-    return jsonify({'token':b64.decode()})
+#     return jsonify({'token':b64.decode()})
 
 # Appointment Route Handler...
 
